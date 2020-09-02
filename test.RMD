@@ -1,2 +1,5 @@
 #Leehyeji's R markdown notebook
 
+```{r}
+plot(cars)
+```
