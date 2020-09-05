@@ -692,7 +692,18 @@ data(murders)</code></pre>
 <p>But how did we know to use <code>population</code>? Previously, by applying the function <code>str</code> to the object <code>murders</code>, we revealed the names for each of the five variables stored in this table. We can quickly access the variable names using:</p>
 <pre class="r"><code>names(murders)</code></pre>
 <pre><code>## [1] &quot;state&quot;      &quot;abb&quot;        &quot;region&quot;     &quot;population&quot; &quot;total&quot;</code></pre>
-<p>It is important to know that the other of the entries in <code>murders$population</code> preserves the order of the rows in our data table. This will later permit us to manipulate one variable based on the results of another. For example, we will be able to order the state names by the number of murders.</p>
+<p>It is important to know that the other of the entries in <code>murders$population</code> preserves the order of the rows in our data table. This will later permit us to manipulate one variable based on the results of another. For example, we will be able to order the state names by the number of murders. <strong>Tip</strong>: R comes with a very nice auto-complete functionality that saves us the trouble of typing out all the names. Try typing <code>murders$p</code> then hitting the <em>tab</em> key on your keyboard. This functionality and many other useful auto-complete features are available when working in RStudio.</p>
+<pre class="r"><code>murders$population</code></pre>
+<pre><code>##  [1]  4779736   710231  6392017  2915918 37253956  5029196  3574097   897934
+##  [9]   601723 19687653  9920000  1360301  1567582 12830632  6483802  3046355
+## [17]  2853118  4339367  4533372  1328361  5773552  6547629  9883640  5303925
+## [25]  2967297  5988927   989415  1826341  2700551  1316470  8791894  2059179
+## [33] 19378102  9535483   672591 11536504  3751351  3831074 12702379  1052567
+## [41]  4625364   814180  6346105 25145561  2763885   625741  8001024  6724540
+## [49]  1852994  5686986   563626</code></pre>
+<div id="vectors-numerics-characters-and-logical" class="section level2">
+<h2>2.4.4 Vectors: numerics, characters, and logical</h2>
+</div>
 </div>
 
 
