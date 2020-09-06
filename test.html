@@ -722,6 +722,28 @@ z</code></pre>
 <pre class="r"><code>class(z)</code></pre>
 <pre><code>## [1] &quot;logical&quot;</code></pre>
 <p>Here the <code>==</code> is a relational operator asking if 3 is equal to 2. In R, if you just use one <code>=</code>, you actually assign a variable, but if you use two <code>==</code> you test for equality.</p>
+<p>You can see the other <em>relational operators</em> by typing:</p>
+<pre class="r"><code>?Comparison</code></pre>
+<p>In future sections, you will see how useful relational operatiors can be.</p>
+<p>We discuss more important feature of vectors after the nest set of exercises.</p>
+<p><strong>Advanced</strong>: Mathematically, the values in <code>pop</code> are integers and there is an integer class in R. However, by default, numbers are assigned class numeric even when they are round integers. Fore example, <code>class(1)</code> returns numeric. You can turn into class integer with the <code>as.integer()</code> function or by adding an <code>L</code> like this: <code>1L</code>. Note the class by typing: `class(1L)</p>
+<pre class="r"><code>class(1)</code></pre>
+<pre><code>## [1] &quot;numeric&quot;</code></pre>
+<pre class="r"><code>as.integer(1)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>class(1L)</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+</div>
+<div id="factors" class="section level2">
+<h2>2.4.5 Factors</h2>
+<p>In the <code>murders</code> dataset, we might expect the region to also be a character vectors. However, it is not:</p>
+<pre class="r"><code>class(murders$region)</code></pre>
+<pre><code>## [1] &quot;factor&quot;</code></pre>
+<p>It is a <strong>factor</strong>. Factors are useful for storing categorical data. We can see that there are only 4 regions by using the <code>levels</code> function:</p>
+<pre class="r"><code>levels(murders$region)</code></pre>
+<pre><code>## [1] &quot;Northeast&quot;     &quot;South&quot;         &quot;North Central&quot; &quot;West&quot;</code></pre>
+<p>In the background, R stores these <em>levels</em> as integers and keeps a map to keep track of the labels. This is more memory efficient than storing all the charactes.</p>
+<p>Note that the levels have an order that is different from the order of appearance in the factor object. The default in R is the levels to follow alphabetical order. However,</p>
 </div>
 </div>
 

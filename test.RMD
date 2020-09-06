@@ -313,4 +313,35 @@ class(z)
 ```
 Here the `==` is a relational operator asking if 3 is equal to 2. In R, if you just use one `=`, you actually assign a variable, but if you use two `==` you test for equality.
 
+You can see the other *relational operators* by typing:
+```{r}
+?Comparison
+```
+In future sections, you will see how useful relational operatiors can be.
 
+We discuss more important feature of vectors after the nest set of exercises.
+
+**Advanced**: Mathematically, the values in `pop` are integers and there is an integer class in R. However, by default, numbers are assigned class numeric even when they are round integers. Fore example, `class(1)` returns numeric. You can turn into class integer with the `as.integer()` function or by adding an `L` like this: `1L`. Note the class by typing: `class(1L)`
+```{r}
+class(1)
+```
+```{r}
+as.integer(1)
+```
+```{r}
+class(1L)
+```
+
+## 2.4.5 Factors
+
+In the `murders` dataset, we might expect the region to also be a character vectors. However, it is not:
+```{r}
+class(murders$region)
+```
+It is a **factor**. Factors are useful for storing categorical data. We can see that there are only 4 regions by using the `levels` function:
+```{r}
+levels(murders$region)
+```
+In the background, R stores these *levels* as integers and keeps a map to keep track of the labels. This is more memory efficient than storing all the characters.
+
+Note that the levels have an order that is different from the order of appearance in the factor object. The default in R is the levels to follow alphabetical order. However, often we want the levels to follow a different order. You can specify an order through the `levels` argument when creating the factor with the `factor` function. For example, in the murders dataset regions are ordered form east to west. The function `reorder` lets us change the order of the levels of a factor variable based on a summary computed on a numeric vector. 
