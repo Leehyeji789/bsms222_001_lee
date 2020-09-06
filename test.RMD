@@ -287,5 +287,30 @@ murders$population
 
 ## 2.4.4 Vectors: numerics, characters, and logical
 
+The object `murders&population` is not one number but several. We call these types of objects *vectors*. A single number is technically a vector of length 1, but in general we use the term vectors to refer to objects with several entries. The function `length` tells you how many entries are in the vector:
+```{r}
+pop <- murders$population
+
+length(pop)
+```
+This particular vector is *numeric* since population sizes are numbers:
+```{r}
+class(murders$state)
+```
+To store charcter strings, vectors can also be of class character. For example, the state names are character:
+```{r}
+class(murders$state)
+```
+As with numeric vectors, all entries in a character vector need to be a character.
+
+Another important type of vectors are *logical vectors*. These must be either `TURE` or `FALSE`.
+```{r}
+z <- 3 == 2
+z
+```
+```{r}
+class(z)
+```
+Here the `==` is a relational operator asking if 3 is equal to 2. In R, if you just use one `=`, you actually assign a variable, but if you use two `==` you test for equality.
 
 

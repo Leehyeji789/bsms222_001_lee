@@ -677,9 +677,8 @@ data(murders)</code></pre>
 ## 6   Colorado  CO   West    5029196    65</code></pre>
 <p>In this dataset, each state is considered an observation and five variables are reported for each state.</p>
 <p>Before we go any further in answering our original question about different states, let’s learn more about the components of this object.</p>
-</div>
-<div id="the-accesor" class="section level1">
-<h1>2.4.3 The accesor: <code>$</code></h1>
+<div id="the-accesor" class="section level2">
+<h2>2.4.3 The accesor: <code>$</code></h2>
 <p>For our analysis, we will need to access the different variables represented by columns included in this data frame. To do this, we use the accessor operator <code>$</code> in the following way:</p>
 <pre class="r"><code>murders$population</code></pre>
 <pre><code>##  [1]  4779736   710231  6392017  2915918 37253956  5029196  3574097   897934
@@ -701,8 +700,28 @@ data(murders)</code></pre>
 ## [33] 19378102  9535483   672591 11536504  3751351  3831074 12702379  1052567
 ## [41]  4625364   814180  6346105 25145561  2763885   625741  8001024  6724540
 ## [49]  1852994  5686986   563626</code></pre>
+</div>
 <div id="vectors-numerics-characters-and-logical" class="section level2">
 <h2>2.4.4 Vectors: numerics, characters, and logical</h2>
+<p>The object <code>murders&amp;population</code> is not one number but several. We call these types of objects <em>vectors</em>. A single number is technically a vector of length 1, but in general we use the term vectors to refer to objects with several entries. The function <code>length</code> tells you how many entries are in the vector:</p>
+<pre class="r"><code>pop &lt;- murders$population
+
+length(pop)</code></pre>
+<pre><code>## [1] 51</code></pre>
+<p>This particular vector is <em>numeric</em> since population sizes are numbers:</p>
+<pre class="r"><code>class(murders$state)</code></pre>
+<pre><code>## [1] &quot;character&quot;</code></pre>
+<p>To store charcter strings, vectors can also be of class character. For example, the state names are character:</p>
+<pre class="r"><code>class(murders$state)</code></pre>
+<pre><code>## [1] &quot;character&quot;</code></pre>
+<p>As with numeric vectors, all entries in a character vector need to be a character.</p>
+<p>Another important type of vectors are <em>logical vectors</em>. These must be either <code>TURE</code> or <code>FALSE</code>.</p>
+<pre class="r"><code>z &lt;- 3 == 2
+z</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>class(z)</code></pre>
+<pre><code>## [1] &quot;logical&quot;</code></pre>
+<p>Here the <code>==</code> is a relational operator asking if 3 is equal to 2. In R, if you just use one <code>=</code>, you actually assign a variable, but if you use two <code>==</code> you test for equality.</p>
 </div>
 </div>
 
