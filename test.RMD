@@ -1,3 +1,9 @@
+---
+title: "R Notebook"
+output:
+  html_document: default
+---
+
 ## 2.2 The very basics
 
 Before we started with the motivating dataset, we need to cover the very basics of R.
@@ -609,7 +615,7 @@ country <- c('italy', 'canada', 'egypt')
 But be careful not to confuse the single quote 'with the *back quote*'.
 
 By now you should know that if you type:
-```
+```{r, eval = false} 
 country <- c(italy, canada, egypt)
 ```
 you receive an error because the variables `italy`, `canada`, and `egypt` are not defined. If we do not use the quotes, R looks for variables with those names and returns an error.
