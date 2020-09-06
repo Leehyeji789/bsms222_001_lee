@@ -615,7 +615,7 @@ country <- c('italy', 'canada', 'egypt')
 But be careful not to confuse the single quote 'with the *back quote*'.
 
 By now you should know that if you type:
-```{r, eval = false} 
+```{r, eval = FALSE} 
 country <- c(italy, canada, egypt)
 ```
 you receive an error because the variables `italy`, `canada`, and `egypt` are not defined. If we do not use the quotes, R looks for variables with those names and returns an error.
