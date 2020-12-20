@@ -1,0 +1,266 @@
+---
+title: "BSMS222_2018240001_Leehyji_20201106"
+output:
+  html_document: 
+    df_print: paged
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+# 1. 주제(가설) 설정
+
+  이 포트폴리오는 Single-cell genomics identifies cell type–specific molecular changes in autism(Velmeshev et al, 2019)를 읽고 작성한다. 논문은 Single cell nucleus RNA sequencing 데이터를 이용해 뇌의 두 영역에서 나타나는 세포별 유전자 발현량을 측정했다. 이를 바탕으로 Cell-type을 구별하고, 자폐증 환자와 대조군 간에 차별적으로 발현되는 유전자(Differently expressed genes;DEGs)를 밝혀냈다.
+
+논문에선 주로 DEGs 데이터를 이용해 자폐증과 관련이 있는 Cell type과 그 기능을 밝혀냈다. 그렇다면 환자의 deleterious variants가 과연 자폐증의 DEGs과 어떤 연관성을 지닐까? 유전자의 발현량이 대조군과 확연하게 차이나는 데에는 환경적 요인도 있을 수 있지만, 선천적으로 발현 조절에 대한 정보를 담고 있는 유전자에 변이가 생겼을 때 발현량의 차이가 발생할 수 있다. 이런 생각을 바탕으로, '유전자 발현 조절에 관련된 변이의 정보와 DEGs와의 관계'를 주제로 데이터를 탐구해 본다.
+
+# 2. 데이터 살펴보기
+
+  포트폴리오에서 사용할 데이터는 DEGs 리스트, 환자의 WGS based deleterious variants 리스트이다. 
+
+```{r}
+library(readxl)
+library(tidyverse)
+library(dplyr)
+library(hrbrthemes)
+library(ggthemes)
+
+d41 <- read_xls('aav8130_Data-S4.xls', 'ASD_DEGs')
+d44 <- read_xls('aav8130_Data-S4.xls', 'Individual_specific_DEGs')
+
+d52 <- read_xlsx('aav8130_Data-S5.xlsx', 'RNA_disrubting_variants_in_DEGs')
+'v4849' <- read_excel('aav8130_Data-S5.xlsx', '4849')
+'v4899' <- read_excel('aav8130_Data-S5.xlsx', '4899')
+'v5144' <- read_excel('aav8130_Data-S5.xlsx', '5144')
+'v5278' <- read_excel('aav8130_Data-S5.xlsx', '5278')
+'v5294' <- read_excel('aav8130_Data-S5.xlsx', '5294')
+'v5403' <- read_excel('aav8130_Data-S5.xlsx', '5403')
+'v5419' <- read_excel('aav8130_Data-S5.xlsx', '5419')
+'v5531' <- read_excel('aav8130_Data-S5.xlsx', '5531')
+'v5565' <- read_excel('aav8130_Data-S5.xlsx', '5565')
+'v5841' <- read_excel('aav8130_Data-S5.xlsx', '5841')
+'v5864' <- read_excel('aav8130_Data-S5.xlsx', '5864')
+'v5939' <- read_excel('aav8130_Data-S5.xlsx', '5939')
+'v5945' <- read_excel('aav8130_Data-S5.xlsx', '5945')
+'v5978' <- read_excel('aav8130_Data-S5.xlsx', '5978')
+'v6033' <- read_excel('aav8130_Data-S5.xlsx', '6033')
+```
+
+  
+각 테이블에 대한 설명은 다음과 같다.
+
+> d41 = 환자 집단과 대조군 간의 DEGs 리스트와 세부 정보
+
+> d44 = 환자 개인별 대조군에 비교한 DEGs 중 5명 이상의 환자에게 공통적으로 나타나는 DEGs
+
+> d52 = RNA-disrupting variants in DEGs 
+
+> v4849 ~ v6033 = 환자 개인별 deleterious variants
+
+
+```{r,eval="FALSE"}
+head(d41)
+head(d44)
+```
+
+
+```{r,eval="FALSE"}
+head(d52)
+head(v4849)
+```
+Data5의 테이블들은 전체적으로 비슷한 구조이다.
+d52는 환자들의 변이 중에서도 DEGs에서 발생하였고, RNA disrupting한 variants를 모아놓은 것이다. 즉 유전자 발현 조절과 상관성이 있는 variants이다.
+d4849~46033은 환자 각각의 deleterious variants 리스트이다.
+
+변수 중에서도, `Ragulatory Site`와 `Gene Region`을 중심으로 데이터를 살펴볼 것이다.
+Regulatory Site 는 해당 변이가 유전자 발현 조절 요소와 관련있는가를 나타내는 변수로, 그 항목을 살펴보면 'Splice site loss', 'Promoter loss', 'ENCODE TFBS'가 있다. 여기서 'ENCODE TFBS'란 ENCODE 프로젝트로부터 밝혀낸 transcription factor bingding site를 의미한다. Gene Region은 변이가 발생한 위치의 유형으로 exon, intron, promoter 등이 해당된다.
+
+
+
+# 3. 데이터 탐색
+
+우선, d44를 보면 표본 기준이 아니라 유전자 기준으로 데이터가 나열되어 있다. 이 데이터를 추후 분석에 용이하게 전처리 작업을 한다. `ASD patients with DE signal` 칼럼을 나누어 다른 행으로 지정하고 d11과 merge 하여 행마다 환자가 가지고 있는 DEG 정보와 임상 정보를 동시에 확인할 수 있게 한다.
+
+```{r}
+idg <- d44 %>% 
+  separate_rows(`ASD patients with DE signal`,sep=',') %>% 
+  rename(., `Patient ID` = `ASD patients with DE signal`)
+```
+
+v4849~v6033 같은 경우도 한 테이블로 합쳐 준다.
+```{r}
+
+
+
+
+for (x in c(v4849, v4899, v5144, v5278, v5294, v5403, v5419, v5531, v5565, v5841, v5864, v5939, v5945, v5978, v6033)){
+  names(x)[9] <- 'Genotype'
+}
+
+```
+
+환자 개인별 DEGs에 생긴 변이 list를 각각 만들어 결합했다.
+
+```{r}
+
+modify(c(v4849, v4899, v5144, v5278, v5294, v5403, v5419, v5531, v5565, v5841, v5864, v5939, v5945, v5978, v6033), funtion(x){
+  x <- x %>%
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(x %>% separate_rows(`Gene Symbol` , sep=';') %>% filter(`Gene Symbol` %in% filter(idg,`Patient ID` == unique(x$`Case Samples`))$`Gene name`)) %>% unique()
+}
+
+
+v4849$`Case Samples`)
+
+k4849 <- v4849 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v4849 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==4849)$`Gene name`)) %>% unique()
+k4899 <- v4899 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v4899 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==4899)$`Gene name`)) %>% unique()
+k5144 <- v5144 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5144 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5144)$`Gene name`)) %>% unique()
+k5278 <- v5278 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5278 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5278)$`Gene name`)) %>% unique()
+k5294<- v5294 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5294 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5294)$`Gene name`)) %>% unique()
+k5403<- v5403%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5403 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5403)$`Gene name`)) %>% unique()
+k5419<- v5419%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5419 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5419)$`Gene name`)) %>% unique()
+k5531<- v5531%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5531 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5531)$`Gene name`)) %>% unique()
+k5565<- v5565%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5565 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5565)$`Gene name`)) %>% unique()
+k5841<- v5841%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5841 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5841)$`Gene name`)) %>% unique()
+k5864<- v5864%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5864 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5864)$`Gene name`)) %>% unique()
+k5939<- v5939%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5939 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5939)$`Gene name`)) %>% unique()
+k5945<- v5945%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5945 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5945)$`Gene name`)) %>% unique()
+k5978<- v5978%>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v5978 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==5978)$`Gene name`)) %>% unique()
+k6033 <- v6033 %>% 
+  filter(`Gene Symbol` %in% d41$`Gene name`) %>%
+  rbind(v6033 %>% 
+  separate_rows(`Gene Symbol` , sep=';') %>% 
+  filter(`Gene Symbol` %in% filter(idg,`Patient ID`==6033)$`Gene name`)) %>% unique()
+
+#4849~6033까지 반복, 결합하기
+degv <- rbind(k4849, k4899, k5144, k5278, k5294, k5403, k5419, k5531, k5565, k5841, k5864, k5939, k5945, k5978, k6033)
+
+
+a <- merge(degv, idg, by.x='Gene Symbol', by.y='Gene name', all.x=T)
+
+
+merge(vg, idg, by.x=c('Gene Symobl', 'Gene ))
+```
+
+
+# 3. 플롯팅
+
+
+```{r}
+d %>%
+  filter(!is.na(`Regulatory Site`)) %>% 
+  group_by(`Case Samples`) %>%
+  summarize(n=length(`Case Samples`), DEG=total) %>% unique() %>%
+  ggplot(aes(DEG, n)) +
+  geom_point()+
+  geom_smooth(method=lm, color="red", fill="grey", se=TRUE)+
+  xlab('Number of individual DEGs')+
+  ylab('Number of Regulatory Site Variants')+
+  ggtitle('Correlation between individual-sepcific DEGs \n and the Regulatory site variants')+
+  geom_text(aes(400, 30, label=
+                  d %>%
+                  filter(!is.na(`Regulatory Site`)) %>%
+                  group_by(`Case Samples`) %>%
+                  summarize(n=length(`Case Samples`), DEG=total) %>%
+                  unique() %>%
+                  cor() %>% 
+                  as_tibble() %>% 
+                  .[2,3] %>% pull(.) %>% 
+                  round(., digit=4)),
+            size=5, family='serif', color='brown')+
+  theme(plot.title = element_text(family = "serif", face = "bold", hjust = 0.5, size = 15, color = "black"))+
+  theme(axis.title = element_text(size = 13, color = "black",family = "serif"))+
+  scale_x_continuous(breaks = c(0,100,200,300,400,500,600, 700,800))+
+  theme_clean()
+
+d %>%
+  separate_rows(`Gene Region`, sep='; ') %>%
+ filter(!is.na(`Regulatory Site`)) %>% 
+  group_by(`Case Samples`, `Gene Region`) %>%
+  summarize(n=length(`Case Samples`), DEG=total) %>% unique() %>%
+  ggplot(aes(DEG, n, col=`Gene Region`)) +
+  geom_point()+
+  geom_smooth(se=T, alpah=0.4, fill='lightgrey')+
+  xlab('Number of individual DEGs')+
+  ylab('Number of Regulatory Site Variants')+
+  ggtitle('Correlation between individual-sepcific DEGs \n and the Regulatory site variants')+
+  theme(plot.title = element_text(family = "serif", face = "bold", hjust = 0.5, size = 15, color = "black"))+
+  theme(axis.title = element_text(size = 13, color = "black",family = "serif"))+
+  scale_x_continuous(breaks = c(0,100,200,300,400,500,600, 700,800))+
+  theme_clean()
+```
+
+# 4. 해석
+
+Regulation Site 와 Gene region 이라는 두 변수를 두고 데이터를 자유롭게 탐험한 결과, Regulation Site는 환자 개인별 DEGs 수와 가장 관련도가 높았다. 또한 Regulation Site 관련 변이의 위치를 종류별로 구분했을 때, Intron과 Promoter 영역이 다른 조건에서보다 높은 비중을 차지했다. 이를 통해 DEGs와 유전자 발현 조절 관련된 변이와의 연관성과, 그 영역에 대한 정보를 짐작해볼 수 있다.

@@ -1,0 +1,92 @@
+---
+title: "GWAS ATLAS"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(ggridges)
+library(biomaRt)
+library(chromoMap)
+library(karyoploteR)
+```
+
+```{r}
+gwas <- read.csv('gwasATLAS_v20191115.txt.gz', sep = '\t')
+col <- read.csv('gwasATLAS_v20191115_columns.txt.gz', sep='\t')
+cg <- read.csv('gwasATLAS_v20191115_GC.txt.gz', sep = '\t')
+risk <-read.csv('gwasATLAS_v20191115_riskloci.txt.gz', sep = '\t')
+magp <- read.csv('gwasATLAS_v20191115_magma_P.txt.gz', sep='\t')
+mags <- read.csv('gwasATLAS_v20191115_magma_sets_P.txt.gz', sep='\t')
+```
+
+```{r}
+#SNP data from biomart
+SNP <- useMart("ENSEMBL_MART_SNP", "hsapiens_snp", host="grch37.ensembl.org", path="/biomart/martservice")
+
+snp <- getBM(attributes=c(
+  "refsnp_id", "chr_name", "chrom_start", "chrom_end",
+  "allele", "allele_1", "minor_allele",
+  "minor_allele_freq","consequence_type_tv","consequence_allele_string", "ensembl_gene_stable_id"),
+  filters="snp_filter", values=risk$rsID,
+  mart=SNP, uniqueRows=TRUE)
+
+#risk+gwas
+
+rl <- merge(gwas %>% dplyr::select(id, Domain), risk, by='id')
+```
+
+
+```{r}
+gwas %>%
+  group_by(Domain) %>%
+  summarize(nhits=mean(Nhits)) %>%
+  ggplot(aes(reorder(Domain, nhits), nhits))+geom_bar(stat='identity')+
+  theme(axis.text.x=element_text(angle=90))
+
+gwas %>%
+  group_by(Domain) %>%
+  ggplot(aes(Domain,log2(Nhits)))+geom_boxplot()+
+  theme(axis.text.x=element_text(angle=90))
+
+risk %>% ggplot(aes(log10(start))) +geom_density(stat='density')+facet_wrap(chr~.)
+
+
+risk %>% filter(chr==1) %>% ggplot(aes(x = log10(start))) + geom_density()
+
+rl %>% ggplot(aes(fill=Domain, x=as.factor(chr)))+
+  geom_bar(position='fill', stat='count')
+```
+
+```{r}
+library("chromoMap")
+
+chr <- tibble(chr = c(seq(1:23)), start = 1, end = c(248956422, 242193529, 198295559, 190214555, 181538259, 170805979, 159345973, 145138636, 138394717, 133797422, 135086622, 133275309, 114364328, 107043718, 101991189, 90338345, 82257441, 80373258, 58617616, 64444167, 46709983, 50181468, 156040895))
+anno <- rl[1:100,] %>% select(id, chr, start, end)
+
+
+write_delim(chr, 'chr.txt', col_names = FALSE, delim = "\t")
+write_delim(anno, 'anno.txt', col_names = FALSE, delim = "\t")
+
+chromoMap('chr.txt', 'anno.txt')
+
+```
+
+```{r}
+#karyoplotR
+
+custom.genome <- toGRanges(data.frame(chr = c(seq(1:23)), start = 1, end = c(248956422, 242193529, 198295559, 190214555, 181538259, 170805979, 159345973, 145138636, 138394717, 133797422, 135086622, 133275309, 114364328, 107043718, 101991189, 90338345, 82257441, 80373258, 58617616, 64444167, 46709983, 50181468, 156040895)))
+
+kp <- plotKaryotype(genome=custom.genome)
+an <- risk %>% dplyr::select(chr, start, end)
+
+kpPlotMarkers(kp,data=an)
+```
+
+
+
+
